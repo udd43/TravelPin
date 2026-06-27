@@ -1,5 +1,4 @@
 import { neon } from '@neondatabase/serverless';
-const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -7,22 +6,24 @@ export default async function handler(req, res) {
   }
 
   try {
+    const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL);
     const { roomId } = req.query;
 
     if (!roomId) {
       return res.status(400).json({ error: 'roomId is required' });
     }
 
-    const result = await sql`
+    // Neon은 rows 배열을 직접 반환
+    const rows = await sql`
       SELECT id, name, created_by, created_at
       FROM rooms WHERE id = ${roomId}
     `;
 
-    if (result.rows.length === 0) {
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Room not found' });
     }
 
-    const room = result.rows[0];
+    const room = rows[0];
     return res.status(200).json({
       roomId: room.id,
       name: room.name,
@@ -31,6 +32,6 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Get room error:', error);
-    return res.status(500).json({ error: 'Failed to get room' });
+    return res.status(500).json({ error: 'Failed to get room', detail: error.message });
   }
 }

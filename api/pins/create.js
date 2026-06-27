@@ -1,5 +1,4 @@
 import { neon } from '@neondatabase/serverless';
-const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,6 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL);
     const { roomId, userId, nickname, avatar, lat, lng, photoUrl, comment } = req.body;
 
     if (!roomId || !userId || !lat || !lng || !photoUrl) {
@@ -22,19 +22,12 @@ export default async function handler(req, res) {
     `;
 
     return res.status(200).json({
-      pinId,
-      roomId,
-      userId,
-      nickname,
-      avatar,
-      lat,
-      lng,
-      photoUrl,
+      pinId, roomId, userId, nickname, avatar, lat, lng, photoUrl,
       comment: comment || '',
       createdAt: now,
     });
   } catch (error) {
     console.error('Create pin error:', error);
-    return res.status(500).json({ error: 'Failed to create pin' });
+    return res.status(500).json({ error: 'Failed to create pin', detail: error.message });
   }
 }

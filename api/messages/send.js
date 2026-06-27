@@ -1,8 +1,4 @@
 import { Redis } from '@upstash/redis';
-const kv = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -10,6 +6,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    const kv = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN,
+    });
+
     const { roomId, userId, nickname, avatar, text, type, lat, lng } = req.body;
 
     if (!roomId || !userId || !text) {
@@ -26,21 +27,17 @@ export default async function handler(req, res) {
       createdAt: Date.now(),
     };
 
-    // 위치 메시지인 경우 좌표 추가
     if (type === 'location' && lat && lng) {
       message.lat = lat;
       message.lng = lng;
     }
 
-    // Redis List에 메시지 추가 (RPUSH: 끝에 추가)
     await kv.rpush(`room:${roomId}:messages`, JSON.stringify(message));
-
-    // 최근 200개만 유지 (오래된 메시지 자동 삭제)
     await kv.ltrim(`room:${roomId}:messages`, -200, -1);
 
     return res.status(200).json({ success: true, message });
   } catch (error) {
     console.error('Send message error:', error);
-    return res.status(500).json({ error: 'Failed to send message' });
+    return res.status(500).json({ error: 'Failed to send message', detail: error.message });
   }
 }

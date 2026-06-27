@@ -1,8 +1,4 @@
 import { Redis } from '@upstash/redis';
-const kv = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -10,13 +6,17 @@ export default async function handler(req, res) {
   }
 
   try {
+    const kv = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN,
+    });
+
     const { roomId, after } = req.query;
 
     if (!roomId) {
       return res.status(400).json({ error: 'roomId is required' });
     }
 
-    // Redis List에서 최근 100개 메시지 가져오기
     const rawMessages = await kv.lrange(`room:${roomId}:messages`, -100, -1);
 
     if (!rawMessages || rawMessages.length === 0) {
@@ -30,7 +30,6 @@ export default async function handler(req, res) {
       return raw;
     });
 
-    // after 파라미터가 있으면 해당 시간 이후 메시지만 반환 (폴링 최적화)
     if (after) {
       const afterTime = Number(after);
       messages = messages.filter((m) => m.createdAt > afterTime);
@@ -39,6 +38,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ messages });
   } catch (error) {
     console.error('List messages error:', error);
-    return res.status(500).json({ error: 'Failed to list messages' });
+    return res.status(500).json({ error: 'Failed to list messages', detail: error.message });
   }
 }
