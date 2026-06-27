@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const POLL_INTERVAL = 3000; // 3초 폴링
+const POLL_INTERVAL = 5000; // 5초 폴링 (서버 부하 감소)
 
 /**
  * 실시간 그룹 채팅 훅
@@ -47,6 +47,8 @@ export function useChat(roomId) {
               lastTimestampRef.current = latest.createdAt;
             }
           }
+        } else {
+          console.error('Fetch messages non-ok response:', await res.text());
         }
       } catch (err) {
         console.error('Fetch messages error:', err);

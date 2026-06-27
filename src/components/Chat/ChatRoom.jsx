@@ -25,6 +25,8 @@ export default function ChatRoom({
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 300);
   }, [isOpen]);
 
+
+
   const handleSend = () => {
     if (!text.trim()) return;
     onSendMessage(text.trim());
@@ -33,6 +35,7 @@ export default function ChatRoom({
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.nativeEvent.isComposing) return;
       e.preventDefault();
       handleSend();
     }
