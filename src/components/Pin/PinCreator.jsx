@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiOutlineCamera, HiOutlinePhoto, HiOutlineXMark, HiOutlineMapPin } from 'react-icons/hi2';
+import { HiOutlineXMark } from 'react-icons/hi2';
 
 export default function PinCreator({ isOpen, onClose, onCreate, position }) {
   const [photoFile, setPhotoFile] = useState(null);
@@ -24,9 +24,7 @@ export default function PinCreator({ isOpen, onClose, onCreate, position }) {
     setUploading(true);
     const success = await onCreate(position.lat, position.lng, photoFile, comment);
     setUploading(false);
-    if (success) {
-      handleClose();
-    }
+    if (success) handleClose();
   };
 
   const handleClose = () => {
@@ -51,7 +49,7 @@ export default function PinCreator({ isOpen, onClose, onCreate, position }) {
             <button className="btn btn-ghost" onClick={handleClose} id="pin-creator-close">
               <HiOutlineXMark style={{ fontSize: '1.25rem' }} />
             </button>
-            <h2>📌 사진 핀 남기기</h2>
+            <h2>CREATE PIN</h2>
             <div style={{ width: 40 }} />
           </div>
 
@@ -61,13 +59,13 @@ export default function PinCreator({ isOpen, onClose, onCreate, position }) {
                 <motion.img
                   src={photoPreview}
                   alt="Preview"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                 />
               ) : (
                 <div className="pin-creator-placeholder">
                   <span className="icon">📸</span>
-                  <span>사진을 선택해주세요</span>
+                  <span>SELECT PHOTO</span>
                 </div>
               )}
             </div>
@@ -96,8 +94,7 @@ export default function PinCreator({ isOpen, onClose, onCreate, position }) {
                 style={{ flex: 1 }}
                 id="pin-camera-btn"
               >
-                <HiOutlineCamera />
-                카메라
+                CAMERA
               </button>
               <button
                 className="btn btn-secondary"
@@ -105,15 +102,15 @@ export default function PinCreator({ isOpen, onClose, onCreate, position }) {
                 style={{ flex: 1 }}
                 id="pin-gallery-btn"
               >
-                <HiOutlinePhoto />
-                갤러리
+                GALLERY
               </button>
             </div>
 
             <div>
+              <label className="input-label">COMMENT</label>
               <input
                 className="input-field"
-                placeholder="한 줄 코멘트를 남겨보세요 ✏️"
+                placeholder="한 줄 코멘트"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 maxLength={100}
@@ -123,14 +120,13 @@ export default function PinCreator({ isOpen, onClose, onCreate, position }) {
 
             {position && (
               <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: 'var(--font-size-xs)',
-                color: 'var(--color-text-muted)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--label)',
+                color: 'var(--text-disabled)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
               }}>
-                <HiOutlineMapPin />
-                {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
+                LAT {position.lat.toFixed(5)} · LNG {position.lng.toFixed(5)}
               </div>
             )}
           </div>
@@ -142,14 +138,7 @@ export default function PinCreator({ isOpen, onClose, onCreate, position }) {
               disabled={!photoFile || uploading}
               id="pin-submit-btn"
             >
-              {uploading ? (
-                <>
-                  <span className="loading-spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
-                  업로드 중...
-                </>
-              ) : (
-                <>📌 핀 남기기</>
-              )}
+              {uploading ? '[ UPLOADING... ]' : 'CREATE PIN'}
             </button>
           </div>
         </motion.div>

@@ -21,7 +21,15 @@ export default function BottomSheet({ isOpen, onClose, children, title }) {
           >
             <div className="bottom-sheet-handle" onClick={onClose} />
             {title && (
-              <div style={{ padding: '0 24px 8px', fontWeight: 600, fontSize: '1.125rem' }}>
+              <div style={{
+                padding: '0 24px 12px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--body)',
+                fontWeight: 400,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: 'var(--text-display)',
+              }}>
                 {title}
               </div>
             )}

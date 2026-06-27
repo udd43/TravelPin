@@ -18,14 +18,14 @@ export default function UserMarker({ user, isMe = false }) {
         <div
           className={`map-marker-avatar ${!user.online ? 'offline' : ''}`}
           style={isMe ? {
-            borderColor: '#22d3ee',
-            boxShadow: '0 0 12px rgba(34, 211, 238, 0.4)',
+            borderColor: '#FFFFFF',
+            borderWidth: '2px',
           } : undefined}
         >
           {avatarEmoji}
         </div>
         <div className="map-marker-label">
-          {isMe ? '나' : user.nickname}
+          {isMe ? 'ME' : user.nickname}
         </div>
       </div>
     </OverlayView>

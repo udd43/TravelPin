@@ -6,7 +6,6 @@ import {
   HiOutlineUserPlus,
   HiOutlineCamera,
   HiOutlineMapPin,
-  HiOutlineUsers,
 } from 'react-icons/hi2';
 
 import UserMarker from '../components/Map/UserMarker';
@@ -30,33 +29,23 @@ const mapContainerStyle = {
   height: '100%',
 };
 
+// Nothing-style monochrome map
 const darkMapStyles = [
-  { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8ec3b9' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1a3646' }] },
-  { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#4b6878' }] },
-  { featureType: 'administrative.land_parcel', elementType: 'labels.text.fill', stylers: [{ color: '#64779e' }] },
-  { featureType: 'administrative.province', elementType: 'geometry.stroke', stylers: [{ color: '#4b6878' }] },
-  { featureType: 'landscape.man_made', elementType: 'geometry.stroke', stylers: [{ color: '#334e87' }] },
-  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#023e58' }] },
-  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#283d6a' }] },
-  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#6f9ba5' }] },
-  { featureType: 'poi', elementType: 'labels.text.stroke', stylers: [{ color: '#1d2c4d' }] },
-  { featureType: 'poi.park', elementType: 'geometry.fill', stylers: [{ color: '#023e58' }] },
-  { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#3C7680' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304a7d' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
-  { featureType: 'road', elementType: 'labels.text.stroke', stylers: [{ color: '#1d2c4d' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2c6675' }] },
-  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#255763' }] },
-  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#b0d5ce' }] },
-  { featureType: 'road.highway', elementType: 'labels.text.stroke', stylers: [{ color: '#023e58' }] },
-  { featureType: 'transit', elementType: 'labels.text.fill', stylers: [{ color: '#98a5be' }] },
-  { featureType: 'transit', elementType: 'labels.text.stroke', stylers: [{ color: '#1d2c4d' }] },
-  { featureType: 'transit.line', elementType: 'geometry.fill', stylers: [{ color: '#283d6a' }] },
-  { featureType: 'transit.station', elementType: 'geometry', stylers: [{ color: '#3a4762' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1626' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4e6d70' }] },
+  { elementType: 'geometry', stylers: [{ color: '#0a0a0a' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#808080' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#0a0a0a' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#333333' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#141414' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
+  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#404040' }] },
+  { featureType: 'poi.park', elementType: 'geometry.fill', stylers: [{ color: '#141414' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1e1e1e' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#808080' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#333333' }] },
+  { featureType: 'transit', elementType: 'labels.text.fill', stylers: [{ color: '#404040' }] },
+  { featureType: 'transit.line', elementType: 'geometry', stylers: [{ color: '#1e1e1e' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#333333' }] },
 ];
 
 const defaultCenter = { lat: 37.5665, lng: 126.978 }; // 서울
@@ -207,7 +196,7 @@ export default function MapRoom({ user }) {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" />
-        <div className="loading-text">지도를 불러오는 중...</div>
+        <div className="loading-text">LOADING MAP</div>
       </div>
     );
   }
@@ -222,21 +211,14 @@ export default function MapRoom({ user }) {
     <div className="map-room" id="map-room">
       {/* Header */}
       <div className="map-header">
-        <div className="map-header-info">
-          <span>🗺️</span>
-          <div>
-            <h1>{room?.name || '여행 방'}</h1>
-            <div className="map-header-members">
-              <HiOutlineUsers style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
-              {onlineMembers.length}명 접속 중
-            </div>
-          </div>
+        <div className="map-header-left">
+          <span className="map-room-name">{room?.name || 'ROOM'}</span>
         </div>
-        <div className="map-header-actions">
+        <div className="map-header-right">
           <button
             className="map-header-btn"
             onClick={() => setShowInvite(true)}
-            title="친구 초대"
+            title="INVITE"
             id="invite-btn"
           >
             <HiOutlineUserPlus />
@@ -245,7 +227,7 @@ export default function MapRoom({ user }) {
       </div>
 
       {/* Map */}
-      <div className="map-container">
+      <div className="map-wrapper">
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           center={mapCenter}
@@ -281,25 +263,23 @@ export default function MapRoom({ user }) {
         </GoogleMap>
 
         {/* FAB Buttons */}
-        <div className="fab-group">
-          <motion.button
-            className="fab fab-primary"
+        <div style={{ position: 'absolute', bottom: 16, right: 16, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 5 }}>
+          <button
+            className="map-header-btn"
             onClick={() => setShowPinCreator(true)}
-            whileTap={{ scale: 0.9 }}
-            title="사진 핀 남기기"
+            title="PIN"
             id="fab-pin"
           >
             <HiOutlineCamera />
-          </motion.button>
-          <motion.button
-            className="fab fab-secondary"
+          </button>
+          <button
+            className="map-header-btn"
             onClick={centerOnMe}
-            whileTap={{ scale: 0.9 }}
-            title="내 위치로"
+            title="CENTER"
             id="fab-center"
           >
             <HiOutlineMapPin />
-          </motion.button>
+          </button>
         </div>
       </div>
 
@@ -322,7 +302,7 @@ export default function MapRoom({ user }) {
       <BottomSheet
         isOpen={!!selectedPin}
         onClose={() => setSelectedPin(null)}
-        title="📌 핀 상세"
+        title="PIN DETAIL"
       >
         <PinDetail
           pin={selectedPin}

@@ -1,11 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  HiOutlineXMark,
-  HiOutlinePaperAirplane,
-  HiOutlineMapPin,
-  HiOutlinePhoto,
-} from 'react-icons/hi2';
+import { HiOutlineXMark, HiOutlinePaperAirplane, HiOutlineMapPin } from 'react-icons/hi2';
 import ChatMessage, { formatDateDivider } from './ChatMessage';
 import { isSameDay } from 'date-fns';
 
@@ -27,9 +22,7 @@ export default function ChatRoom({
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 300);
-    }
+    if (isOpen) setTimeout(() => inputRef.current?.focus(), 300);
   }, [isOpen]);
 
   const handleSend = () => {
@@ -45,11 +38,6 @@ export default function ChatRoom({
     }
   };
 
-  const handleLocationShare = () => {
-    onSendLocation?.();
-  };
-
-  // 날짜 구분선 처리
   const renderMessages = () => {
     const result = [];
     let lastDate = null;
@@ -65,11 +53,7 @@ export default function ChatRoom({
         lastDate = msgDate;
       }
       result.push(
-        <ChatMessage
-          key={msg.msgId}
-          msg={msg}
-          isMe={msg.userId === currentUid}
-        />
+        <ChatMessage key={msg.msgId} msg={msg} isMe={msg.userId === currentUid} />
       );
     });
 
@@ -87,23 +71,18 @@ export default function ChatRoom({
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         >
           <div className="chat-header">
-            <button
-              className="btn btn-ghost btn-icon"
-              onClick={onClose}
-              id="chat-close-btn"
-            >
+            <button className="btn btn-ghost btn-icon" onClick={onClose} id="chat-close-btn">
               <HiOutlineXMark />
             </button>
-            <h2>💬 {roomName || '그룹 채팅'}</h2>
+            <h2>[ CHAT ] {roomName || ''}</h2>
           </div>
 
           <div className="chat-messages">
             {messages.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-state-icon">💬</div>
                 <div className="empty-state-text">
-                  아직 메시지가 없어요.<br />
-                  첫 메시지를 보내보세요!
+                  NO MESSAGES YET<br />
+                  첫 메시지를 보내보세요
                 </div>
               </div>
             ) : (
@@ -115,17 +94,17 @@ export default function ChatRoom({
           <div className="chat-input-area">
             <button
               className="btn btn-ghost btn-icon"
-              onClick={handleLocationShare}
+              onClick={() => onSendLocation?.()}
               id="chat-location-btn"
-              title="내 위치 공유"
-              style={{ fontSize: '1.1rem', color: 'var(--color-accent)' }}
+              title="위치 공유"
+              style={{ color: 'var(--accent)' }}
             >
               <HiOutlineMapPin />
             </button>
             <input
               ref={inputRef}
               className="chat-input"
-              placeholder="메시지를 입력하세요..."
+              placeholder="MESSAGE..."
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
