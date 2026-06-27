@@ -13,6 +13,21 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
   const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar || 'avatar_0');
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
+  const [recentRooms, setRecentRooms] = useState([]);
+
+  // 컴포넌트 마운트 시 최근 방문 방 불러오기
+  useState(() => {
+    try {
+      const recent = JSON.parse(localStorage.getItem('travelpin_recent_rooms') || '[]');
+      setRecentRooms(recent);
+    } catch (e) {
+      setRecentRooms([]);
+    }
+  });
+
+  const handleRecentRoomClick = (roomId) => {
+    navigate(`/room/${roomId}`);
+  };
 
   const handleCreateRoom = async () => {
     if (!roomName.trim()) {
@@ -104,6 +119,28 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
                 </button>
               </div>
             </div>
+
+            {recentRooms.length > 0 && (
+              <div style={{ width: '100%', maxWidth: 400, marginTop: 24 }}>
+                <h2 style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 'var(--label)', color: 'var(--text-secondary)',
+                  marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.08em'
+                }}>RECENT ROOMS</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {recentRooms.map(room => (
+                    <button
+                      key={room.id}
+                      className="btn btn-secondary btn-full"
+                      onClick={() => handleRecentRoomClick(room.id)}
+                      style={{ justifyContent: 'space-between', padding: '12px 16px' }}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.name}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-disabled)' }}>ENTER →</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 

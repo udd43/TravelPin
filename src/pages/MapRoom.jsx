@@ -6,6 +6,7 @@ import {
   HiOutlineUserPlus,
   HiOutlineCamera,
   HiOutlineMapPin,
+  HiOutlineArrowLeft,
 } from 'react-icons/hi2';
 
 import UserMarker from '../components/Map/UserMarker';
@@ -100,6 +101,36 @@ export default function MapRoom({ user }) {
   useEffect(() => {
     if (showChat) setLastMsgCount(messages.length);
   }, [showChat, messages.length]);
+
+  // 새 메시지 토스트 알림
+  const previousMessagesLength = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > previousMessagesLength.current) {
+      if (!showChat && messages.length > 0) {
+        const latestMsg = messages[messages.length - 1];
+        if (latestMsg.userId !== user?.uid) {
+          setToast({ message: `💬 ${latestMsg.nickname}: ${latestMsg.text}`, type: 'success' });
+        }
+      }
+    }
+    previousMessagesLength.current = messages.length;
+  }, [messages, showChat, user?.uid]);
+
+  // 최근 방문한 방 기록 저장
+  useEffect(() => {
+    if (room && roomId) {
+      try {
+        const recent = JSON.parse(localStorage.getItem('travelpin_recent_rooms') || '[]');
+        const newRecent = [
+          { id: roomId, name: room.name, lastVisited: Date.now() },
+          ...recent.filter(r => r.id !== roomId)
+        ].slice(0, 5); // 최근 5개 유지
+        localStorage.setItem('travelpin_recent_rooms', JSON.stringify(newRecent));
+      } catch (e) {
+        console.error('Failed to save recent room', e);
+      }
+    }
+  }, [room, roomId]);
 
   // Map callbacks
   const onMapLoad = useCallback((map) => {
@@ -211,7 +242,16 @@ export default function MapRoom({ user }) {
     <div className="map-room" id="map-room">
       {/* Header */}
       <div className="map-header">
-        <div className="map-header-left">
+        <div className="map-header-left" style={{ alignItems: 'center' }}>
+          <button
+            className="map-header-btn"
+            onClick={() => navigate('/')}
+            title="HOME"
+            id="home-btn"
+            style={{ width: 36, height: 36, fontSize: '1rem' }}
+          >
+            <HiOutlineArrowLeft />
+          </button>
           <span className="map-room-name">{room?.name || 'ROOM'}</span>
         </div>
         <div className="map-header-right">
