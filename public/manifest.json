@@ -1,0 +1,17 @@
+{
+  "name": "TravelPin",
+  "short_name": "TravelPin",
+  "description": "친구들과 실시간 위치를 공유하고 여행의 순간을 지도에 남겨보세요",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1a",
+  "theme_color": "#0a0f1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
