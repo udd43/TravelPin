@@ -1,17 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Compressor from 'compressorjs';
 
-const POLL_INTERVAL = 5000; // 5초 폴링 (핀은 위치보다 덜 빈번)
+const POLL_INTERVAL = 5000;
 
 /**
  * 사진 핀 CRUD 훅
- * Firebase onValue() + Storage → fetch API + Vercel Blob으로 전환
+ * 관리자는 모든 핀 삭제 가능
  */
 export function usePins(roomId) {
   const [pins, setPins] = useState([]);
   const intervalRef = useRef(null);
 
-  // 핀 목록 폴링
   useEffect(() => {
     if (!roomId) return;
 
@@ -49,10 +48,8 @@ export function usePins(roomId) {
 
   const createPin = useCallback(async (roomId, user, lat, lng, photoFile, comment = '') => {
     try {
-      // 1. 사진 압축
       const compressed = await compressImage(photoFile);
 
-      // 2. Vercel Blob에 사진 업로드
       const filename = `${roomId}/${Date.now()}_${user.uid}.jpg`;
       const uploadRes = await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
         method: 'POST',
@@ -69,7 +66,6 @@ export function usePins(roomId) {
       }
       const { url: photoUrl } = await uploadRes.json();
 
-      // 3. Postgres에 핀 데이터 저장
       const pinRes = await fetch('/api/pins/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,7 +83,6 @@ export function usePins(roomId) {
 
       if (!pinRes.ok) throw new Error('핀 저장 실패');
 
-      // 즉시 UI에 반영
       const newPin = await pinRes.json();
       setPins((prev) => [newPin, ...prev]);
 
@@ -98,18 +93,30 @@ export function usePins(roomId) {
     }
   }, []);
 
-  const deletePin = useCallback(async (roomId, pinId, uid, pinUserId) => {
-    if (uid !== pinUserId) return false;
+  // user 객체를 받아서 관리자면 관리자 인증도 함께 전달
+  const deletePin = useCallback(async (roomId, pinId, uid, pinUserId, user) => {
+    const isAdmin = user?.isAdmin;
+
+    // 일반 유저는 자기 핀만 삭제
+    if (!isAdmin && uid !== pinUserId) return false;
+
     try {
+      const body = { pinId, userId: uid };
+
+      // 관리자인 경우 관리자 인증 추가
+      if (isAdmin) {
+        body.adminNickname = user.nickname;
+        body.adminPassword = user.adminPassword;
+      }
+
       const res = await fetch('/api/pins/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pinId, userId: uid }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) return false;
 
-      // 즉시 UI에서 제거
       setPins((prev) => prev.filter((p) => p.pinId !== pinId));
       return true;
     } catch (err) {

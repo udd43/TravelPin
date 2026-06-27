@@ -7,9 +7,10 @@ import {
   HiOutlineCamera,
   HiOutlineMapPin,
   HiOutlineArrowLeft,
+  HiOutlineCog6Tooth,
 } from 'react-icons/hi2';
 
-import UserMarker from '../components/Map/UserMarker';
+import UserMarker, { AVATARS } from '../components/Map/UserMarker';
 import PinMarker from '../components/Pin/PinMarker';
 import PinCreator from '../components/Pin/PinCreator';
 import PinDetail from '../components/Pin/PinDetail';
@@ -71,6 +72,9 @@ export default function MapRoom({ user }) {
   const [selectedPin, setSelectedPin] = useState(null);
   const [toast, setToast] = useState(null);
   const [lastMsgCount, setLastMsgCount] = useState(0);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  const isAdmin = user?.isAdmin === true;
 
   // Google Maps Loader
   const { isLoaded, loadError } = useJsApiLoader({
@@ -182,14 +186,73 @@ export default function MapRoom({ user }) {
     return success;
   };
 
-  // 핀 삭제
+  // 핀 삭제 (관리자는 user 전체를 전달)
   const handleDeletePin = async (pinId) => {
     const pin = pins.find(p => p.pinId === pinId);
     if (!pin) return;
-    const success = await deletePin(roomId, pinId, user.uid, pin.userId);
+    const success = await deletePin(roomId, pinId, user.uid, pin.userId, user);
     if (success) {
       setSelectedPin(null);
       setToast({ message: '핀이 삭제되었어요.', type: 'success' });
+    }
+  };
+
+  // [관리자] 방 삭제
+  const handleDeleteRoom = async () => {
+    if (!isAdmin) return;
+    if (!window.confirm('정말 이 방을 삭제하시겠어요? 모든 데이터가 사라집니다.')) return;
+    try {
+      const res = await fetch('/api/rooms/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId,
+          adminNickname: user.nickname,
+          adminPassword: user.adminPassword,
+        }),
+      });
+      if (res.ok) {
+        // localStorage에서 최근 방 목록 정리
+        try {
+          const recent = JSON.parse(localStorage.getItem('travelpin_recent_rooms') || '[]');
+          localStorage.setItem('travelpin_recent_rooms', JSON.stringify(recent.filter(r => r.id !== roomId)));
+        } catch (e) {}
+        setToast({ message: '방이 삭제되었습니다.', type: 'success' });
+        setTimeout(() => navigate('/'), 1000);
+      } else {
+        setToast({ message: '방 삭제에 실패했어요.', type: 'error' });
+      }
+    } catch (err) {
+      console.error('Delete room failed:', err);
+      setToast({ message: '방 삭제 중 오류 발생', type: 'error' });
+    }
+  };
+
+  // [관리자] 멤버 강퇴
+  const handleKickMember = async (targetUid) => {
+    if (!isAdmin) return;
+    if (targetUid === user.uid) {
+      setToast({ message: '자기 자신은 강퇴할 수 없어요.', type: 'error' });
+      return;
+    }
+    try {
+      const res = await fetch('/api/users/kick', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId,
+          targetUserId: targetUid,
+          adminNickname: user.nickname,
+          adminPassword: user.adminPassword,
+        }),
+      });
+      if (res.ok) {
+        setToast({ message: '멤버를 강퇴했어요.', type: 'success' });
+      } else {
+        setToast({ message: '강퇴에 실패했어요.', type: 'error' });
+      }
+    } catch (err) {
+      console.error('Kick member failed:', err);
     }
   };
 
@@ -282,9 +345,23 @@ export default function MapRoom({ user }) {
           >
             <HiOutlineArrowLeft />
           </button>
-          <span className="map-room-name">{room?.name || 'ROOM'}</span>
+          <span className="map-room-name">
+            {isAdmin && <span style={{ color: 'var(--accent)', marginRight: 4 }}>★</span>}
+            {room?.name || 'ROOM'}
+          </span>
         </div>
         <div className="map-header-right">
+          {isAdmin && (
+            <button
+              className="map-header-btn"
+              onClick={() => setShowAdminPanel(true)}
+              title="ADMIN"
+              id="admin-btn"
+              style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
+            >
+              <HiOutlineCog6Tooth />
+            </button>
+          )}
           <button
             className="map-header-btn"
             onClick={() => setShowInvite(true)}
@@ -380,6 +457,7 @@ export default function MapRoom({ user }) {
           onNavigate={handleNavigateToPin}
           onDelete={handleDeletePin}
           currentUid={user?.uid}
+          isAdmin={isAdmin}
         />
       </BottomSheet>
 
@@ -401,6 +479,70 @@ export default function MapRoom({ user }) {
         onClose={() => setShowInvite(false)}
         roomId={roomId}
       />
+
+      {/* Admin Panel */}
+      {isAdmin && (
+        <BottomSheet
+          isOpen={showAdminPanel}
+          onClose={() => setShowAdminPanel(false)}
+          title="ADMIN PANEL"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* 멤버 목록 + 강퇴 */}
+            <div>
+              <div className="input-label" style={{ marginBottom: 12 }}>MEMBERS</div>
+              <div className="members-list">
+                {members.map(member => (
+                  <div className="member-row" key={member.uid}>
+                    <div className="avatar avatar-sm">
+                      {AVATARS[parseInt(member.avatar?.replace('avatar_', '') || '0')] || '🧑‍✈️'}
+                    </div>
+                    <div className="member-info">
+                      <div className="member-name">
+                        {member.nickname || '??'}
+                        {member.uid === user.uid && ' (ME)'}
+                      </div>
+                      <div className={`member-status ${member.online ? 'online' : 'offline'}`}>
+                        {member.online ? 'ONLINE' : 'OFFLINE'}
+                      </div>
+                    </div>
+                    {member.uid !== user.uid && (
+                      <button
+                        className="btn btn-destructive"
+                        onClick={() => handleKickMember(member.uid)}
+                        style={{ padding: '6px 12px', minHeight: 'unset', fontSize: '11px' }}
+                      >
+                        KICK
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 방 삭제 */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+              <button
+                className="btn btn-destructive btn-full btn-lg"
+                onClick={handleDeleteRoom}
+              >
+                DELETE ROOM
+              </button>
+              <p style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '10px',
+                color: 'var(--text-disabled)',
+                textAlign: 'center',
+                marginTop: 8,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}>
+                모든 데이터가 영구 삭제됩니다
+              </p>
+            </div>
+          </div>
+        </BottomSheet>
+      )}
 
       {/* Toast */}
       {toast && (

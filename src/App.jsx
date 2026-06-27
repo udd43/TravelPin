@@ -20,8 +20,8 @@ function App() {
     }
   }, [loading, user, signIn]);
 
-  const handleSetProfile = async (nickname, avatar) => {
-    await setProfile(nickname, avatar);
+  const handleSetProfile = async (nickname, avatar, adminPassword) => {
+    await setProfile(nickname, avatar, adminPassword);
   };
 
   const handleCreateRoom = async (roomName) => {

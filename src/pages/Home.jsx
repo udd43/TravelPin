@@ -1,3 +1,5 @@
+
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,8 +16,11 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
   const [recentRooms, setRecentRooms] = useState([]);
+  const [adminPassword, setAdminPassword] = useState('');
 
-  // 컴포넌트 마운트 시 최근 방문 방 불러오기
+  // 관리자 비밀번호 입력 필드 표시 여부
+  const showAdminField = nickname.trim() === '장종원';
+
   useEffect(() => {
     try {
       const recent = JSON.parse(localStorage.getItem('travelpin_recent_rooms') || '[]');
@@ -25,7 +30,6 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
     }
   }, []);
 
-  // 이미 프로필이 설정된 유저가 초대 링크로 왔을 때 바로 입장
   useEffect(() => {
     if (urlRoomId && user?.nickname && !joining) {
       handleAutoJoin();
@@ -45,12 +49,10 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
     }
   };
 
-  // 최근 방에 입장 (프로필 있으면 바로, 없으면 프로필 설정으로)
   const handleRecentRoomClick = (roomId) => {
     if (user?.nickname) {
       navigate(`/room/${roomId}`);
     } else {
-      // 프로필 없으면 프로필 입력 화면으로
       setStep('nickname');
     }
   };
@@ -68,10 +70,17 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
       setError('닉네임을 입력해주세요.');
       return;
     }
+
+    // 관리자 닉네임인데 비밀번호가 틀린 경우
+    if (nickname.trim() === '장종원' && adminPassword && adminPassword !== '4356') {
+      setError('관리자 비밀번호가 틀렸어요.');
+      return;
+    }
+
     setJoining(true);
     setError('');
 
-    await onSetProfile(nickname.trim(), selectedAvatar);
+    await onSetProfile(nickname.trim(), selectedAvatar, showAdminField ? adminPassword : null);
 
     if (urlRoomId) {
       const success = await onJoinRoom(urlRoomId);
@@ -100,7 +109,6 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
     );
   }
 
-  // 초대 링크로 왔고 이미 닉네임이 있으면 로딩 표시
   if (urlRoomId && user?.nickname && joining) {
     return (
       <div className="loading-screen">
@@ -143,9 +151,7 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
                     id="room-name-input"
                   />
                 </div>
-                {error && (
-                  <p className="error-text">{error}</p>
-                )}
+                {error && <p className="error-text">{error}</p>}
                 <button
                   className="btn btn-primary btn-full btn-lg"
                   onClick={handleCreateRoom}
@@ -211,6 +217,27 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
                   />
                 </div>
 
+                {/* 관리자 비밀번호 필드 — 닉네임이 "장종원"일 때만 노출 */}
+                {showAdminField && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    <label className="input-label" style={{ color: 'var(--accent)' }}>ADMIN PASSWORD</label>
+                    <input
+                      className="input-field"
+                      type="password"
+                      placeholder="관리자 비밀번호"
+                      value={adminPassword}
+                      onChange={(e) => { setAdminPassword(e.target.value); setError(''); }}
+                      maxLength={10}
+                      id="admin-password-input"
+                      style={{ borderBottomColor: 'var(--accent)' }}
+                    />
+                  </motion.div>
+                )}
+
                 <div>
                   <label className="input-label">AVATAR</label>
                   <div className="avatar-selector">
@@ -227,9 +254,7 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
                   </div>
                 </div>
 
-                {error && (
-                  <p className="error-text">{error}</p>
-                )}
+                {error && <p className="error-text">{error}</p>}
 
                 <button
                   className="btn btn-primary btn-full btn-lg"

@@ -3,7 +3,7 @@ import { ko } from 'date-fns/locale';
 import { getDistance, formatDistance, getBearing, bearingToDirection } from '../../utils/distance';
 import { AVATARS } from '../Map/UserMarker';
 
-export default function PinDetail({ pin, myPosition, onNavigate, onDelete, currentUid }) {
+export default function PinDetail({ pin, myPosition, onNavigate, onDelete, currentUid, isAdmin }) {
   if (!pin) return null;
 
   const avatarEmoji = AVATARS[parseInt(pin.avatar?.replace('avatar_', '') || '0')] || '🧑‍✈️';
@@ -21,7 +21,7 @@ export default function PinDetail({ pin, myPosition, onNavigate, onDelete, curre
     ? format(new Date(pin.createdAt), 'M월 d일 a h:mm', { locale: ko })
     : '';
 
-  const canDelete = currentUid === pin.userId;
+  const canDelete = isAdmin || currentUid === pin.userId;
 
   return (
     <div className="animate-fade-in">
