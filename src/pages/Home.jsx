@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AVATARS } from '../components/Map/UserMarker';
@@ -16,17 +16,43 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
   const [recentRooms, setRecentRooms] = useState([]);
 
   // 컴포넌트 마운트 시 최근 방문 방 불러오기
-  useState(() => {
+  useEffect(() => {
     try {
       const recent = JSON.parse(localStorage.getItem('travelpin_recent_rooms') || '[]');
       setRecentRooms(recent);
     } catch (e) {
       setRecentRooms([]);
     }
-  });
+  }, []);
 
+  // 이미 프로필이 설정된 유저가 초대 링크로 왔을 때 바로 입장
+  useEffect(() => {
+    if (urlRoomId && user?.nickname && !joining) {
+      handleAutoJoin();
+    }
+  }, [urlRoomId, user?.nickname]);
+
+  const handleAutoJoin = async () => {
+    if (!user?.nickname || !urlRoomId || joining) return;
+    setJoining(true);
+    setError('');
+    const success = await onJoinRoom(urlRoomId);
+    if (success) {
+      navigate(`/room/${urlRoomId}`);
+    } else {
+      setError('존재하지 않는 여행 방이에요.');
+      setJoining(false);
+    }
+  };
+
+  // 최근 방에 입장 (프로필 있으면 바로, 없으면 프로필 설정으로)
   const handleRecentRoomClick = (roomId) => {
-    navigate(`/room/${roomId}`);
+    if (user?.nickname) {
+      navigate(`/room/${roomId}`);
+    } else {
+      // 프로필 없으면 프로필 입력 화면으로
+      setStep('nickname');
+    }
   };
 
   const handleCreateRoom = async () => {
@@ -70,6 +96,16 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
       <div className="loading-screen">
         <div className="loading-spinner" />
         <div className="loading-text">LOADING</div>
+      </div>
+    );
+  }
+
+  // 초대 링크로 왔고 이미 닉네임이 있으면 로딩 표시
+  if (urlRoomId && user?.nickname && joining) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner" />
+        <div className="loading-text">JOINING ROOM</div>
       </div>
     );
   }

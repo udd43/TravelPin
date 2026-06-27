@@ -10,6 +10,7 @@ export default function ChatRoom({
   messages,
   onSendMessage,
   onSendLocation,
+  onLocationClick,
   currentUid,
   roomName,
 }) {
@@ -24,8 +25,6 @@ export default function ChatRoom({
   useEffect(() => {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 300);
   }, [isOpen]);
-
-
 
   const handleSend = () => {
     if (!text.trim()) return;
@@ -56,7 +55,12 @@ export default function ChatRoom({
         lastDate = msgDate;
       }
       result.push(
-        <ChatMessage key={msg.msgId} msg={msg} isMe={msg.userId === currentUid} />
+        <ChatMessage
+          key={msg.msgId}
+          msg={msg}
+          isMe={msg.userId === currentUid}
+          onLocationClick={onLocationClick}
+        />
       );
     });
 

@@ -62,7 +62,11 @@ export function usePins(roomId) {
         },
       });
 
-      if (!uploadRes.ok) throw new Error('사진 업로드 실패');
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json().catch(() => ({}));
+        console.error('Photo upload failed:', errData);
+        throw new Error(errData.detail || '사진 업로드 실패');
+      }
       const { url: photoUrl } = await uploadRes.json();
 
       // 3. Postgres에 핀 데이터 저장

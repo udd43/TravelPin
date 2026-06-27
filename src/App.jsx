@@ -39,7 +39,7 @@ function App() {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" />
-        <div className="loading-text">TravelPin을 시작하는 중...</div>
+        <div className="loading-text">INITIALIZING</div>
       </div>
     );
   }
@@ -74,6 +74,8 @@ function App() {
           )
         }
       />
+      {/* Fallback: redirect unknown paths to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

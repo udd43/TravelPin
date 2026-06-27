@@ -61,7 +61,7 @@ export default function MapRoom({ user }) {
   const { members, updateMyLocation } = useMembers(roomId, user?.uid);
   const { pins, createPin, deletePin } = usePins(roomId);
   const { messages, sendMessage, sendLocationMessage } = useChat(roomId);
-  const { room, getRoomInfo } = useRoom();
+  const { room, getRoomInfo, joinRoom } = useRoom();
 
   // State
   const [activeTab, setActiveTab] = useState('map');
@@ -77,10 +77,21 @@ export default function MapRoom({ user }) {
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
   });
 
-  // 방 정보 불러오기
+  // 방 정보 불러오기 + 자동 join (방에 진입할 때마다 멤버로 등록)
+  const joinedRef = useRef(false);
   useEffect(() => {
-    if (roomId) getRoomInfo(roomId);
-  }, [roomId, getRoomInfo]);
+    if (!roomId || !user?.uid) return;
+    
+    getRoomInfo(roomId);
+    
+    // 방에 들어올 때 자동으로 join 호출 (KV에 멤버로 재등록)
+    if (!joinedRef.current) {
+      joinedRef.current = true;
+      joinRoom(roomId, user).catch(err => {
+        console.error('Auto join room failed:', err);
+      });
+    }
+  }, [roomId, user?.uid, getRoomInfo, joinRoom, user]);
 
   // 내 위치 업데이트 (5초마다)
   useEffect(() => {
@@ -109,7 +120,10 @@ export default function MapRoom({ user }) {
       if (!showChat && messages.length > 0) {
         const latestMsg = messages[messages.length - 1];
         if (latestMsg.userId !== user?.uid) {
-          setToast({ message: `💬 ${latestMsg.nickname}: ${latestMsg.text}`, type: 'success' });
+          const msgPreview = latestMsg.text.length > 30 
+            ? latestMsg.text.slice(0, 30) + '...' 
+            : latestMsg.text;
+          setToast({ message: `💬 ${latestMsg.nickname}: ${msgPreview}`, type: 'success' });
         }
       }
     }
@@ -124,7 +138,7 @@ export default function MapRoom({ user }) {
         const newRecent = [
           { id: roomId, name: room.name, lastVisited: Date.now() },
           ...recent.filter(r => r.id !== roomId)
-        ].slice(0, 5); // 최근 5개 유지
+        ].slice(0, 5);
         localStorage.setItem('travelpin_recent_rooms', JSON.stringify(newRecent));
       } catch (e) {
         console.error('Failed to save recent room', e);
@@ -162,6 +176,8 @@ export default function MapRoom({ user }) {
     const success = await createPin(roomId, user, lat, lng, photoFile, comment);
     if (success) {
       setToast({ message: '📌 핀이 등록되었어요!', type: 'success' });
+    } else {
+      setToast({ message: '핀 생성에 실패했어요', type: 'error' });
     }
     return success;
   };
@@ -192,22 +208,36 @@ export default function MapRoom({ user }) {
   const handleSendLocation = () => {
     if (position) {
       sendLocationMessage(roomId, user, position.lat, position.lng);
+      setToast({ message: '📍 위치를 공유했어요', type: 'success' });
+    } else {
+      setToast({ message: '위치를 가져올 수 없어요', type: 'error' });
+    }
+  };
+
+  // 채팅에서 위치 클릭 시 지도 이동
+  const handleLocationClick = (lat, lng) => {
+    setShowChat(false);
+    setActiveTab('map');
+    if (mapRef.current) {
+      mapRef.current.panTo({ lat, lng });
+      mapRef.current.setZoom(16);
     }
   };
 
   // 위치 권한 필요
   if (permissionState === 'denied') {
     return (
-      <div className="permission-screen">
-        <div className="permission-icon">📍</div>
-        <h2>위치 접근 권한이 필요해요</h2>
-        <p>
+      <div className="loading-screen" style={{ gap: 20, padding: 32, textAlign: 'center' }}>
+        <div style={{ fontSize: 48 }}>📍</div>
+        <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--title)', color: 'var(--text-display)', textTransform: 'uppercase' }}>
+          LOCATION REQUIRED
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
           TravelPin은 친구들과 실시간 위치를 공유하기 위해
           위치 접근 권한이 필요합니다.
-          브라우저 설정에서 위치 권한을 허용해주세요.
         </p>
         <button className="btn btn-primary btn-lg" onClick={requestPermission}>
-          권한 허용하기
+          ALLOW LOCATION
         </button>
       </div>
     );
@@ -215,10 +245,12 @@ export default function MapRoom({ user }) {
 
   if (loadError) {
     return (
-      <div className="permission-screen">
-        <div className="permission-icon">⚠️</div>
-        <h2>지도를 불러올 수 없어요</h2>
-        <p>Google Maps를 로드하는 데 실패했습니다. 네트워크 연결을 확인해주세요.</p>
+      <div className="loading-screen" style={{ gap: 20, padding: 32, textAlign: 'center' }}>
+        <div style={{ fontSize: 48 }}>⚠️</div>
+        <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--title)', color: 'var(--text-display)', textTransform: 'uppercase' }}>
+          MAP LOAD FAILED
+        </h2>
+        <p style={{ color: 'var(--text-secondary)' }}>네트워크 연결을 확인해주세요.</p>
       </div>
     );
   }
@@ -235,8 +267,6 @@ export default function MapRoom({ user }) {
   const mapCenter = position
     ? { lat: position.lat, lng: position.lng }
     : defaultCenter;
-
-  const onlineMembers = members.filter(m => m.online);
 
   return (
     <div className="map-room" id="map-room">
@@ -360,6 +390,7 @@ export default function MapRoom({ user }) {
         messages={messages}
         onSendMessage={handleSendMessage}
         onSendLocation={handleSendLocation}
+        onLocationClick={handleLocationClick}
         currentUid={user?.uid}
         roomName={room?.name}
       />
