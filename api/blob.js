@@ -1,5 +1,11 @@
 import { put } from '@vercel/blob';
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -16,8 +22,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Blob storage not configured' });
     }
 
+    // request body를 Buffer로 수집 (bodyParser: false 시 raw stream)
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    const body = Buffer.concat(chunks);
+
+    if (body.length === 0) {
+      return res.status(400).json({ error: 'Empty file body' });
+    }
+
     // Vercel Blob에 파일 업로드
-    const blob = await put(filename, req, {
+    const blob = await put(filename, body, {
       access: 'public',
       contentType: req.headers['content-type'] || 'image/jpeg',
       token,
@@ -32,9 +49,3 @@ export default async function handler(req, res) {
     });
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};

@@ -51,7 +51,7 @@ export function usePins(roomId) {
       const compressed = await compressImage(photoFile);
 
       const filename = `${roomId}/${Date.now()}_${user.uid}.jpg`;
-      const uploadRes = await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
+      const uploadRes = await fetch(`/api/blob?filename=${encodeURIComponent(filename)}`, {
         method: 'POST',
         body: compressed,
         headers: {
