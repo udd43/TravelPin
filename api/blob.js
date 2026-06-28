@@ -35,8 +35,8 @@ export default async function handler(req, res) {
 
     // Vercel Blob에 파일 업로드
     const blob = await put(filename, body, {
-      access: 'public',
       contentType: req.headers['content-type'] || 'image/jpeg',
+      addRandomSuffix: false,
       token,
     });
 
