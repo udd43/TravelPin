@@ -1,7 +1,7 @@
 import { Redis } from '@upstash/redis';
 
-const ADMIN_NICKNAME = '장종원';
-const ADMIN_PASSWORD = '4356';
+const ADMIN_NICKNAME = process.env.ADMIN_NICKNAME || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

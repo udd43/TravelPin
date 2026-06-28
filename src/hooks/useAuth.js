@@ -6,7 +6,7 @@ const STORAGE_KEY = 'travelpin_user';
 /**
  * localStorage 기반 익명 인증 훅
  * Firebase Anonymous Auth 대체 — UUID로 사용자 식별
- * 관리자: 닉네임 "장종원" + 비밀번호 "4356"
+ * 관리자 인증은 서버 사이드에서 환경변수로 처리
  */
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -43,7 +43,8 @@ export function useAuth() {
   const signIn = useCallback(() => {}, []);
 
   const setProfile = useCallback(async (nickname, avatar, adminPassword = null) => {
-    const isAdmin = nickname === '장종원' && adminPassword === '4356';
+    // 관리자 여부는 서버에서 검증 — 클라이언트는 비밀번호가 입력되었는지만 확인
+    const isAdmin = !!adminPassword;
     
     setUser((prev) => {
       const updated = {

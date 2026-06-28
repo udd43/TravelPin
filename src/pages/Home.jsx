@@ -17,9 +17,7 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
   const [error, setError] = useState('');
   const [recentRooms, setRecentRooms] = useState([]);
   const [adminPassword, setAdminPassword] = useState('');
-
-  // 관리자 비밀번호 입력 필드 표시 여부
-  const showAdminField = nickname.trim() === '장종원';
+  const [showAdminField, setShowAdminField] = useState(false);
 
   useEffect(() => {
     try {
@@ -71,11 +69,7 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
       return;
     }
 
-    // 관리자 닉네임인데 비밀번호가 틀린 경우
-    if (nickname.trim() === '장종원' && adminPassword && adminPassword !== '4356') {
-      setError('관리자 비밀번호가 틀렸어요.');
-      return;
-    }
+
 
     setJoining(true);
     setError('');
@@ -217,7 +211,7 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
                   />
                 </div>
 
-                {/* 관리자 비밀번호 필드 — 닉네임이 "장종원"일 때만 노출 */}
+                {/* 관리자 비밀번호 필드 */}
                 {showAdminField && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -274,6 +268,15 @@ export default function Home({ user, onSetProfile, onCreateRoom, onJoinRoom, loa
                     ← BACK
                   </button>
                 )}
+
+                <button
+                  className="btn btn-ghost btn-full"
+                  onClick={() => setShowAdminField(!showAdminField)}
+                  style={{ fontSize: '11px', opacity: 0.4 }}
+                  id="admin-toggle-btn"
+                >
+                  {showAdminField ? 'CLOSE ADMIN' : 'ADMIN LOGIN'}
+                </button>
               </div>
             </div>
           </motion.div>
