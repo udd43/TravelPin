@@ -11,9 +11,16 @@ export default defineConfig({
     chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom', 'framer-motion'],
-          maps: ['@react-google-maps/api'],
+        manualChunks(id) {
+          if (id.includes('react-dom') || id.includes('react-router-dom') || id.includes('framer-motion')) {
+            return 'vendor';
+          }
+          if (id.includes('react') && !id.includes('react-dom') && !id.includes('react-router-dom')) {
+            return 'vendor';
+          }
+          if (id.includes('@react-google-maps/api')) {
+            return 'maps';
+          }
         },
       },
     },
