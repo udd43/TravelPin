@@ -202,7 +202,7 @@ export default function MapRoom({ user }) {
     if (!isAdmin) return;
     if (!window.confirm('정말 이 방을 삭제하시겠어요? 모든 데이터가 사라집니다.')) return;
     try {
-      const res = await fetch('/api/rooms/delete', {
+      const res = await fetch('/api/rooms?action=delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -236,7 +236,7 @@ export default function MapRoom({ user }) {
       return;
     }
     try {
-      const res = await fetch('/api/users/kick', {
+      const res = await fetch('/api/users?action=kick', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

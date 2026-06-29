@@ -12,7 +12,7 @@ export function useRoom() {
   const createRoom = useCallback(async (roomName, user) => {
     try {
       setRoomLoading(true);
-      const res = await fetch('/api/rooms/create', {
+      const res = await fetch('/api/rooms?action=create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -43,7 +43,7 @@ export function useRoom() {
   const joinRoom = useCallback(async (roomId, user) => {
     try {
       setRoomLoading(true);
-      const res = await fetch('/api/rooms/join', {
+      const res = await fetch('/api/rooms?action=join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -80,7 +80,7 @@ export function useRoom() {
 
   const getRoomInfo = useCallback(async (roomId) => {
     try {
-      const res = await fetch(`/api/rooms/${roomId}`);
+      const res = await fetch(`/api/rooms?roomId=${roomId}`);
       if (!res.ok) return null;
       const data = await res.json();
       setRoom(data);

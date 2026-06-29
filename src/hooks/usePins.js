@@ -16,7 +16,7 @@ export function usePins(roomId) {
 
     const fetchPins = async () => {
       try {
-        const res = await fetch(`/api/pins/list?roomId=${roomId}`);
+        const res = await fetch(`/api/pins?roomId=${roomId}`);
         if (res.ok) {
           const data = await res.json();
           setPins(data.pins || []);
@@ -66,7 +66,7 @@ export function usePins(roomId) {
       }
       const { url: photoUrl } = await uploadRes.json();
 
-      const pinRes = await fetch('/api/pins/create', {
+      const pinRes = await fetch('/api/pins?action=create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -109,7 +109,7 @@ export function usePins(roomId) {
         body.adminPassword = user.adminPassword;
       }
 
-      const res = await fetch('/api/pins/delete', {
+      const res = await fetch('/api/pins?action=delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

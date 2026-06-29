@@ -17,7 +17,7 @@ export function useChat(roomId) {
 
     const fetchMessages = async () => {
       try {
-        let url = `/api/messages/list?roomId=${roomId}`;
+        let url = `/api/messages?roomId=${roomId}`;
         // after 파라미터로 마지막 메시지 이후만 가져오기 (최적화)
         if (lastTimestampRef.current > 0) {
           url += `&after=${lastTimestampRef.current}`;
@@ -68,7 +68,7 @@ export function useChat(roomId) {
   const sendMessage = useCallback(async (roomId, user, text, type = 'text', extra = {}) => {
     if (!roomId || !user || !text.trim()) return;
     try {
-      const res = await fetch('/api/messages/send', {
+      const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

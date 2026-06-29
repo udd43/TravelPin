@@ -16,7 +16,7 @@ export function useMembers(roomId, currentUid) {
 
     const fetchMembers = async () => {
       try {
-        const res = await fetch(`/api/users/location?roomId=${roomId}`);
+        const res = await fetch(`/api/users?roomId=${roomId}`);
         if (res.ok) {
           const data = await res.json();
           setMembers(data.members || []);
@@ -38,7 +38,7 @@ export function useMembers(roomId, currentUid) {
   const updateMyLocation = useCallback(async (roomId, uid, lat, lng, nickname, avatar) => {
     if (!roomId || !uid) return;
     try {
-      await fetch('/api/users/location', {
+      await fetch('/api/users?action=location', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomId, userId: uid, nickname, avatar, lat, lng }),
